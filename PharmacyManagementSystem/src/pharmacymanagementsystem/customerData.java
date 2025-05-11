@@ -7,10 +7,6 @@ package pharmacymanagementsystem;
 
 import java.sql.Date;
 
-/**
- *
- * @author WINDOWS 10
- */
 public class customerData {
     
     private final Integer customerId;

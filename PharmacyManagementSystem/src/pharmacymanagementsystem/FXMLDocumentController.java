@@ -28,12 +28,10 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-/**
- *
- * @author WINDOWS 10
- */
+
 public class FXMLDocumentController implements Initializable {
-    
+    private final database db = database.getInstance();
+
     @FXML
     private AnchorPane main_form;
 
@@ -59,9 +57,10 @@ public class FXMLDocumentController implements Initializable {
     public void loginAdmin(){
         
         String sql = "SELECT * FROM admin WHERE username = ? and password = ?";
-        
-        connect = database.connectDb();
-        
+
+        connect = db.connectDb();
+
+
         try{
             prepare = connect.prepareStatement(sql);
             prepare.setString(1, username.getText());

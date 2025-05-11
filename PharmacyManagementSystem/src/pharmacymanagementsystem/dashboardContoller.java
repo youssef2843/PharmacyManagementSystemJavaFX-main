@@ -219,6 +219,7 @@ public class dashboardContoller implements Initializable {
     private PreparedStatement prepare;
     private Statement statement;
     private ResultSet result;
+    private final database db = database.getInstance();
 
     private Image image;
 
@@ -228,8 +229,7 @@ public class dashboardContoller implements Initializable {
         String sql = "SELECT date, SUM(total) FROM customer_info"
                 + " GROUP BY date ORDER BY TIMESTAMP(date) ASC LIMIT 9";
 
-        connect = database.connectDb();
-
+        connect = db.connectDb();
         try{
             XYChart.Series chart = new XYChart.Series();
 
@@ -250,7 +250,8 @@ public class dashboardContoller implements Initializable {
 
         String sql = "SELECT COUNT(id) FROM medicine WHERE status = 'Available'";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
         int countAM = 0;
         try{
             prepare = connect.prepareStatement(sql);
@@ -269,7 +270,8 @@ public class dashboardContoller implements Initializable {
     public void homeTI(){
         String sql = "SELECT SUM(total) FROM customer_info";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
         double totalDisplay = 0;
         try{
             prepare = connect.prepareStatement(sql);
@@ -291,7 +293,7 @@ public class dashboardContoller implements Initializable {
 
         String sql = "SELECT COUNT(id) FROM customer_info";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
         int countTC = 0;
 
         try{
@@ -313,7 +315,8 @@ public class dashboardContoller implements Initializable {
         String sql = "INSERT INTO medicine (medicine_id, brand, productName, type, status, price, image, date) "
                 + "VALUES(?,?,?,?,?,?,?,?)";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
 
@@ -393,7 +396,8 @@ public class dashboardContoller implements Initializable {
                 +addMedicines_price.getText()+"', image = '"+uri+"' WHERE medicine_id = '"
                 +addMedicines_medicineID.getText()+"'";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             Alert alert;
@@ -438,7 +442,8 @@ public class dashboardContoller implements Initializable {
 
         String sql = "DELETE FROM medicine WHERE medicine_id = '"+addMedicines_medicineID.getText()+"'";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             Alert alert;
@@ -544,7 +549,8 @@ public class dashboardContoller implements Initializable {
 
         ObservableList<medicineData> listData = FXCollections.observableArrayList();
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             prepare = connect.prepareStatement(sql);
@@ -647,7 +653,8 @@ public class dashboardContoller implements Initializable {
         String sql = "INSERT INTO customer (customer_id,type,medicine_id,brand,productName,quantity,price,date)"
                 + " VALUES(?,?,?,?,?,?,?,?)";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             Alert alert;
@@ -703,7 +710,8 @@ public class dashboardContoller implements Initializable {
 
         String sql = "SELECT SUM(price) FROM customer WHERE customer_id = '"+customerId+"'";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             prepare = connect.prepareStatement(sql);
@@ -746,7 +754,8 @@ public class dashboardContoller implements Initializable {
         String sql = "INSERT INTO customer_info (customer_id, total, date) "
                 + "VALUES(?,?,?)";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             Alert alert;
@@ -806,7 +815,8 @@ public class dashboardContoller implements Initializable {
 
         ObservableList<customerData> listData = FXCollections.observableArrayList();
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             customerData customerD;
@@ -847,7 +857,8 @@ public class dashboardContoller implements Initializable {
 
         String sql = "SELECT customer_id FROM customer";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             prepare = connect.prepareStatement(sql);
@@ -880,7 +891,8 @@ public class dashboardContoller implements Initializable {
 
         String sql = "SELECT type FROM medicine WHERE status = 'Available'";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             ObservableList listData = FXCollections.observableArrayList();
@@ -904,7 +916,8 @@ public class dashboardContoller implements Initializable {
         String sql = "SELECT * FROM medicine WHERE type = '"
                 +purchase_type.getSelectionModel().getSelectedItem()+"'";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             ObservableList listData = FXCollections.observableArrayList();
@@ -926,7 +939,8 @@ public class dashboardContoller implements Initializable {
         String sql = "SELECT * FROM medicine WHERE medicine_id = '"
                 +purchase_medicineID.getSelectionModel().getSelectedItem()+"'";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             ObservableList listData = FXCollections.observableArrayList();
@@ -950,7 +964,8 @@ public class dashboardContoller implements Initializable {
         String sql = "SELECT * FROM medicine WHERE brand = '"
                 +purchase_brand.getSelectionModel().getSelectedItem()+"'";
 
-        connect = database.connectDb();
+        connect = db.connectDb();
+
 
         try{
             ObservableList listData = FXCollections.observableArrayList();
@@ -1042,6 +1057,7 @@ public class dashboardContoller implements Initializable {
 
             if (option.get().equals(ButtonType.OK)) {
                 // HIDE THE DASHBOARD FORM
+                db.closeConnection();
                 logout.getScene().getWindow().hide();
                 // LINK YOUR LOGIN FORM
                 Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
