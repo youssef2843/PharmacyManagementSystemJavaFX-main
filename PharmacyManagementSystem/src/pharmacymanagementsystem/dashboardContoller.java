@@ -4,7 +4,6 @@
  * and open the template in the editor.
  */
 package pharmacymanagementsystem;
-
 import java.io.File;
 import java.net.URL;
 import java.sql.Connection;
@@ -48,12 +47,16 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import pharmacymanagementsystem.CompositDP.PurchaseComposite;
+import pharmacymanagementsystem.CompositDP.PurchaseLeaf;
 
 /**
  *
  * @author WINDOWS 10
  */
 public class dashboardContoller implements Initializable {
+
+    private ObservableList<customerData> purchaseList;
 
     @FXML
     private AnchorPane main_form;
@@ -164,19 +167,19 @@ public class dashboardContoller implements Initializable {
     private AnchorPane purchase_form;
 
     @FXML
-    private ComboBox<?> purchase_type;
+    private ComboBox<String> purchase_type;
 
     @FXML
     private Spinner<Integer> purchase_quantity;
 
     @FXML
-    private ComboBox<?> purchase_medicineID;
+    private ComboBox<String> purchase_medicineID;
 
     @FXML
-    private ComboBox<?> purchase_brand;
+    private ComboBox<String> purchase_brand;
 
     @FXML
-    private ComboBox<?> purchase_productName;
+    private ComboBox<String> purchase_productName;
 
     @FXML
     private Button purchase_addBtn;
@@ -587,43 +590,39 @@ public class dashboardContoller implements Initializable {
 
     }
 
-    public void addMedicineSearch(){
+    public void addMedicineSearch() {
+        FilteredList<medicineData> filter = new FilteredList<>(addMedicineList, e -> true);
 
-        FilteredList<medicineData> filter = new FilteredList<>(addMedicineList, e-> true);
-
-        addMedicines_search.textProperty().addListener((Observable, oldValue, newValue) ->{
-
-            filter.setPredicate(predicateMedicineData ->{
-
-                if(newValue == null || newValue.isEmpty()){
+        addMedicines_search.textProperty().addListener((observable, oldValue, newValue) -> {
+            filter.setPredicate(predicateMedicineData -> {
+                if (newValue == null || newValue.isEmpty()) {
                     return true;
                 }
 
                 String searchKey = newValue.toLowerCase();
 
-                if(predicateMedicineData.getMedicineId().toString().contains(searchKey)){
+                if (predicateMedicineData.getMedicineId().toString().contains(searchKey)) {
                     return true;
-                }else if(predicateMedicineData.getBrand().toLowerCase().contains(searchKey)){
+                } else if (predicateMedicineData.getBrand().toLowerCase().contains(searchKey)) {
                     return true;
-                }else if(predicateMedicineData.getProductName().toLowerCase().contains(searchKey)){
+                } else if (predicateMedicineData.getProductName().toLowerCase().contains(searchKey)) {
                     return true;
-                }else if(predicateMedicineData.getType().toLowerCase().contains(searchKey)){
+                } else if (predicateMedicineData.getType().toLowerCase().contains(searchKey)) {
                     return true;
-                }else if(predicateMedicineData.getStatus().toLowerCase().contains(searchKey)){
+                } else if (predicateMedicineData.getStatus().toLowerCase().contains(searchKey)) {
                     return true;
-                }else if(predicateMedicineData.getPrice().toString().contains(searchKey)){
+                } else if (predicateMedicineData.getPrice().toString().contains(searchKey)) {
                     return true;
-                }else if(predicateMedicineData.getDate().toString().contains(searchKey)){
+                } else if (predicateMedicineData.getDate().toString().contains(searchKey)) {
                     return true;
-                }else return false;
+                }
+                return false;
             });
         });
 
-        SortedList<medicineData> sortList = new SortedList<>(filter);
-
-        sortList.comparatorProperty().bind(addMedicines_tableView.comparatorProperty());
-        addMedicines_tableView.setItems(sortList);
-
+        SortedList<medicineData> sortedList = new SortedList<>(filter);
+        sortedList.comparatorProperty().bind(addMedicines_tableView.comparatorProperty());
+        addMedicines_tableView.setItems(sortedList);
     }
 
     public void addMedicineSelect(){
@@ -837,10 +836,24 @@ public class dashboardContoller implements Initializable {
         return listData;
     }
 
-    private ObservableList<customerData> purchaseList;
-    public void purchaseShowListData(){
+    // Add this field if you want to keep a reference to the composite
+    //private PurchaseComposite allPurchases;
+
+    public void purchaseShowListData() {
+        // Fetch purchase data
         purchaseList = purchaseListData();
 
+        // Create a composite for all purchases
+        PurchaseComposite allPurchases = new PurchaseComposite();
+        for (customerData data : purchaseList) {
+            allPurchases.add(new PurchaseLeaf(data));
+        }
+
+        // Calculate total price using the composite
+        double total = allPurchases.getTotalPrice();
+        purchase_total.setText("$" + total);
+
+        // Display purchases in the TableView
         purchase_col_medicineId.setCellValueFactory(new PropertyValueFactory<>("medicineId"));
         purchase_col_brand.setCellValueFactory(new PropertyValueFactory<>("brand"));
         purchase_col_productName.setCellValueFactory(new PropertyValueFactory<>("productName"));
@@ -850,6 +863,8 @@ public class dashboardContoller implements Initializable {
 
         purchase_tableView.setItems(purchaseList);
 
+        // Optionally display all purchases in the console
+        allPurchases.display();
     }
 
     private int customerId;
@@ -887,98 +902,144 @@ public class dashboardContoller implements Initializable {
 
     }
 
-    public void purchaseType(){
+    public void purchaseType() {
+        try {
+            if (connect == null) {
+                connect = db.connectDb();
+            }
 
-        String sql = "SELECT type FROM medicine WHERE status = 'Available'";
-
-        connect = db.connectDb();
-
-
-        try{
-            ObservableList listData = FXCollections.observableArrayList();
-
+            ObservableList<String> listData = FXCollections.observableArrayList();
+            String sql = "SELECT DISTINCT type FROM medicine WHERE status = 'Available'";
             prepare = connect.prepareStatement(sql);
             result = prepare.executeQuery();
 
-            while(result.next()){
+            while (result.next()) {
                 listData.add(result.getString("type"));
             }
+
             purchase_type.setItems(listData);
 
-            purchaseMedicineId();
+            // أضف مستمع لتحديث medicine ID عند تغيير النوع
+            purchase_type.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    purchaseMedicineId();
+                }
+            });
 
-        }catch(Exception e){e.printStackTrace();}
-
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (result != null) result.close();
+                if (prepare != null) prepare.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    public void purchaseMedicineId(){
+    public void purchaseMedicineId() {
+        try {
+            if (connect == null) {
+                connect = db.connectDb();
+            }
 
-        String sql = "SELECT * FROM medicine WHERE type = '"
-                +purchase_type.getSelectionModel().getSelectedItem()+"'";
-
-        connect = db.connectDb();
-
-
-        try{
-            ObservableList listData = FXCollections.observableArrayList();
-
+            ObservableList<String> listData = FXCollections.observableArrayList();
+            String sql = "SELECT DISTINCT medicine_id FROM medicine WHERE type = ? AND status = 'Available'";
             prepare = connect.prepareStatement(sql);
+            prepare.setString(1, purchase_type.getSelectionModel().getSelectedItem());
             result = prepare.executeQuery();
 
-            while(result.next()){
+            while (result.next()) {
                 listData.add(result.getString("medicine_id"));
             }
+
             purchase_medicineID.setItems(listData);
 
-            purchaseBrand();
-        }catch(Exception e){e.printStackTrace();}
+            // أضف مستمع لتحديث العلامة التجارية عند تغيير medicine ID
+            purchase_medicineID.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    purchaseBrand();
+                }
+            });
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (result != null) result.close();
+                if (prepare != null) prepare.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    public void purchaseBrand(){
+    public void purchaseBrand() {
+        try {
+            if (connect == null) {
+                connect = db.connectDb();
+            }
 
-        String sql = "SELECT * FROM medicine WHERE medicine_id = '"
-                +purchase_medicineID.getSelectionModel().getSelectedItem()+"'";
-
-        connect = db.connectDb();
-
-
-        try{
-            ObservableList listData = FXCollections.observableArrayList();
-
+            ObservableList<String> listData = FXCollections.observableArrayList();
+            String sql = "SELECT DISTINCT brand FROM medicine WHERE medicine_id = ? AND status = 'Available'";
             prepare = connect.prepareStatement(sql);
+            prepare.setString(1, purchase_medicineID.getSelectionModel().getSelectedItem());
             result = prepare.executeQuery();
 
-            while(result.next()){
+            while (result.next()) {
                 listData.add(result.getString("brand"));
             }
+
             purchase_brand.setItems(listData);
 
-            purchaseProductName();
+            // أضف مستمع لتحديث اسم المنتج عند تغيير العلامة التجارية
+            purchase_brand.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    purchaseProductName();
+                }
+            });
 
-        }catch(Exception e){e.printStackTrace();}
-
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (result != null) result.close();
+                if (prepare != null) prepare.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    public void purchaseProductName(){
+    public void purchaseProductName() {
+        try {
+            if (connect == null) {
+                connect = db.connectDb();
+            }
 
-        String sql = "SELECT * FROM medicine WHERE brand = '"
-                +purchase_brand.getSelectionModel().getSelectedItem()+"'";
-
-        connect = db.connectDb();
-
-
-        try{
-            ObservableList listData = FXCollections.observableArrayList();
-
+            ObservableList<String> listData = FXCollections.observableArrayList();
+            String sql = "SELECT DISTINCT productName FROM medicine WHERE brand = ? AND status = 'Available'";
             prepare = connect.prepareStatement(sql);
+            prepare.setString(1, purchase_brand.getSelectionModel().getSelectedItem());
             result = prepare.executeQuery();
 
-            while(result.next()){
+            while (result.next()) {
                 listData.add(result.getString("productName"));
             }
-            purchase_productName.setItems(listData);
-        }catch(Exception e){e.printStackTrace();}
 
+            purchase_productName.setItems(listData);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (result != null) result.close();
+                if (prepare != null) prepare.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void defaultNav(){
