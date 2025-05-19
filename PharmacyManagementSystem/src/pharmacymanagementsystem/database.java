@@ -2,45 +2,41 @@ package pharmacymanagementsystem;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 
+/**
+ * ===== Singleton Pattern =====
+ * This class ensures only one instance of the database connection is created and reused.
+ */
 public class database {
+
     private static database instance;
     private Connection connection;
 
-    private database() {}
+    private static final String URL = "jdbc:mysql://localhost/pharmacy";
+    private static final String USER = "root";
+    private static final String PASSWORD = "";
 
-    public static database getInstance() {
+    // Private constructor to prevent instantiation
+    private database() {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            this.connection = DriverManager.getConnection(URL, USER, PASSWORD);
+        } catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Public method to get the singleton instance
+    public static synchronized database getInstance() {
         if (instance == null) {
             instance = new database();
         }
         return instance;
     }
 
-    public Connection connectDb() {
-        try {
-            if (connection == null) {
-                Class.forName("com.mysql.jdbc.Driver");
-                connection = DriverManager.getConnection(
-                    "jdbc:mysql://localhost/pharmacy",
-                    "root",
-                    ""
-                );
-            }
-            return connection;
-        } catch(Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Database connection failed: " + e.getMessage());
-        }
-    }
-
-    public void closeConnection() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-                connection = null;
-            }
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+    // Method to get the connection
+    public Connection getConnection() {
+        return connection;
     }
 }

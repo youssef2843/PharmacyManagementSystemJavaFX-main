@@ -9,7 +9,6 @@ import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -28,10 +27,12 @@ import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-
+/**
+ *
+ * @author WINDOWS 10
+ */
 public class FXMLDocumentController implements Initializable {
-    private final database db = database.getInstance();
-
+    
     @FXML
     private AnchorPane main_form;
 
@@ -46,7 +47,7 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     private Button close;
-
+    
 //    DATABASE TOOLS
     private PreparedStatement prepare;
     private Connection connect;
@@ -58,9 +59,8 @@ public class FXMLDocumentController implements Initializable {
         
         String sql = "SELECT * FROM admin WHERE username = ? and password = ?";
 
-        connect = db.connectDb();
-
-
+        connect = database.getInstance().getConnection();
+        
         try{
             prepare = connect.prepareStatement(sql);
             prepare.setString(1, username.getText());
@@ -90,7 +90,7 @@ public class FXMLDocumentController implements Initializable {
                     // HIDE YOUR LOGIN FORM
                     loginBtn.getScene().getWindow().hide();
                     // LINK YOUR DASHBOARD FORM
-                    Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("dashboard.fxml")));
+                    Parent root = FXMLLoader.load(getClass().getResource("dashboard.fxml"));
                     Stage stage = new Stage();
                     Scene scene = new Scene(root);
                     

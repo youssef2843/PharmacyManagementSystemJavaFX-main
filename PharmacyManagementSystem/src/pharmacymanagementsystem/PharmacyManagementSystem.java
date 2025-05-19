@@ -13,16 +13,17 @@ import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-import java.util.Objects;
-
-
+/**
+ *
+ * @author WINDOWS 10
+ */
 public class PharmacyManagementSystem extends Application {
     
     private double x = 0;
     private double y = 0;
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("FXMLDocument.fxml")));
+        Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
         
         Scene scene = new Scene(root);
         
@@ -48,6 +49,9 @@ public class PharmacyManagementSystem extends Application {
         stage.show();
     }
 
+    /**
+     * @param args the command line arguments
+     */
     public static void main(String[] args) {
         launch(args);
     }
